@@ -5,6 +5,7 @@ require(gnlm)
 library(R2jags)
 library(tidyverse)
 library(investr)
+library(ggpubr)
 
 ### Figure 1 R Code --------------
 f1<-function(x,t,b,n){
@@ -18,12 +19,15 @@ f2<-function(x,b0,b1,b2){
 
 t1<-data.frame(x=seq(0,20,0.01),y=f1(seq(0,20,0.01),0.95,0.25,3.5),Equation=factor("1"))
 t2<-data.frame(x=seq(0,20,0.01),y=f2(seq(0,20,0.01),0.95,0.005,2.5),Equation=factor("2"))
+
+pdf("Figure1.pdf", width = 7, height = 5)
 rbind(t1,t2) |> 
   dplyr::mutate(Curve=ifelse(Equation==1, "Threshold", "No threshold")) |> 
 ggplot(aes(x=x,y=y,group=Curve))+ geom_line(aes(color=Curve)) +
-  xlab("Concentration (x)") + ylab("Response (y") +
+  xlab("Concentration (x)") + ylab("Response (y)") +
   theme_classic() +
   theme(legend.title=element_blank(), legend.position = c(0.87, 0.7))
+dev.off()
 
 ### Figure 2 --------- 
 #Note drawn in Powerpoint
@@ -55,9 +59,10 @@ c.interval <- as_tibble(predFit(fit, newdata = new.data, interval = "confidence"
 
 p1 <- ggplot(nsec.dat) +  
   geom_point(aes(x=x, y=y),size=2, 
-  colour="black") + xlab("concentration units") + ylab("growth (cm)")  
+  colour="black") + xlab("Concentration (x)") + ylab("Response (y)") 
 
-p1+
+pdf("Figure3.pdf", width = 7, height = 5)
+p1 +
   geom_line(data=p.interval, aes(x = x, y = fit ),color="red")+ 
   scale_x_continuous(expand=c(0.01,0),breaks=c(seq(0,60,by=5)))+
   scale_y_continuous(expand=c(0,0))+
@@ -66,10 +71,11 @@ p1+
   geom_ribbon(data=p.interval, aes(x=x, ymin=lwr, ymax=upr), alpha=0.5, inherit.aes=F, fill="#B0C4DE")+
   geom_segment(aes(x=ols_nsec,y=-2,xend=ols_nsec,yend=lwrb0),inherit.aes = TRUE,linetype=2) + 
   geom_segment(aes(x=0,y=lwrb0,xend=ols_nsec,yend=lwrb0),inherit.aes = TRUE,linetype=2) +
-  annotate("text", x = ols_nsec*1.05, y = -1.9, label = "5") +
+  annotate("text", x = ols_nsec*1.1, y = -1.7, label = "5") +
   theme_classic()
+dev.off()
 
-### Figure 4 R Code -------------
+### Figure 4a R Code -------------
 dat <- read.csv("Table_2.csv")
 
 x<-dat$concentration
@@ -141,17 +147,17 @@ pmle<-ggplot(data=nsec.dat,aes(x=x,y=y/n))+ geom_point()+
   geom_segment(aes(x=0,y=p_20,xend=SEC_80,yend=p_20),inherit.aes = TRUE,linetype=2) +
   
   annotate("text", x = c(SEC_99, SEC_95, SEC_90, SEC_80), 
-           y = -0.01, label = c("1", "5", "10", "20")) +
+           y = -0.02, label = c("1", "5", "10", "20")) +
   
   # ols result
   geom_line(data=data.frame(x=seq(0,35,0.001),y=pred(x=seq(0,35,0.001),B.cur)),
             aes(x=x,y=y),color="red") +
   theme_classic() +
-  xlab("concentration") + ylab("response") 
+  xlab("Concentration (x)") + ylab("Response (y)") 
 pmle
 
 
-### Figure 5 R Code ----------------------
+### Figure 4b R Code ----------------------
 dat <- read.csv("Table_2.csv")
 model_file <- "jags_model.txt"
 
@@ -238,20 +244,24 @@ pjags<-ggplot(data=nsec.dat,aes(x=x,y=y/n))+ geom_point()+
   geom_segment(aes(x=0,y=control_quantiles[4],xend=NSECsummary[1,4],
                    yend=control_quantiles[4]),inherit.aes = TRUE,linetype=2) +
   
-  annotate("text", x = NSECsummary[1,], y = -0.01, label = c("1", "5", "10", "20")) +
+  annotate("text", x = NSECsummary[1,], y = -0.02, label = c("1", "5", "10", "20")) +
   
   geom_line(data=data.frame(x=x.seq,y=up.vals),
             aes(x=x,y=y),color="#00BFFF") +
   geom_line(data=data.frame(x=x.seq,y=lw.vals),
             aes(x=x,y=y),color="#00BFFF") +
   theme_classic() +
-  xlab("concentration") + ylab("response") 
+  xlab("Concentration (x)") + ylab("Response (y)") 
 
 
 pjags
 
-
-
+### Figure 4 single panel plot ----
+pdf("Figure4.pdf", width = 7, height = 10)
+ggarrange(pmle, pjags, 
+          labels = c("(A)", "(B)"),
+          ncol = 1, nrow = 2)
+dev.off()
 
 
 
