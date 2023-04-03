@@ -71,7 +71,7 @@ p1 +
   geom_ribbon(data=p.interval, aes(x=x, ymin=lwr, ymax=upr), alpha=0.5, inherit.aes=F, fill="#B0C4DE")+
   geom_segment(aes(x=ols_nsec,y=-2,xend=ols_nsec,yend=lwrb0),inherit.aes = TRUE,linetype=2) + 
   geom_segment(aes(x=0,y=lwrb0,xend=ols_nsec,yend=lwrb0),inherit.aes = TRUE,linetype=2) +
-  annotate("text", x = ols_nsec*1.1, y = -1.7, label = "5") +
+  annotate("text", x = ols_nsec*1.1, y = -1.7, label = "NSEC5%") +
   theme_classic()
 dev.off()
 
@@ -125,35 +125,40 @@ cat(paste("SEC_95>",signif(SEC_95,3)))
 cat(paste("SEC_90>",signif(SEC_90,3)))
 cat(paste("SEC_80>",signif(SEC_80,3)))
 t2<-data.frame(x=seq(0,35,0.01),y=pred(seq(0,35,0.01),B.new))
+ypos <- -Inf
    
 pmle<-ggplot(data=nsec.dat,aes(x=x,y=y/n))+ geom_point()+  
   geom_line(data=data.frame(x=seq(0,35,0.01),
                             y=pred(x=seq(0,35,0.01),B.new)),
             aes(x=x,y=y),color="blue") +
   # NSEC 99
-  geom_segment(aes(x=SEC_99,y=0,xend=SEC_99,yend=p_1),inherit.aes = TRUE,linetype=2) + 
+  geom_segment(aes(x=SEC_99,y=ypos,xend=SEC_99,yend=p_1),inherit.aes = TRUE,linetype=2) + 
   geom_segment(aes(x=0,y=p_1,xend=SEC_99,yend=p_1),inherit.aes = TRUE,linetype=2) +
   
   #NSEC 95
-  geom_segment(aes(x=SEC_95,y=0,xend=SEC_95,yend=p_5),inherit.aes = TRUE,linetype=2) + 
+  geom_segment(aes(x=SEC_95,y=ypos,xend=SEC_95,yend=p_5),inherit.aes = TRUE,linetype=2) + 
   geom_segment(aes(x=0,y=p_5,xend=SEC_95,yend=p_5),inherit.aes = TRUE,linetype=2) +
 
   #NSEC 90
-  geom_segment(aes(x=SEC_90,y=0,xend=SEC_90,yend=p_10),inherit.aes = TRUE,linetype=2) + 
+  geom_segment(aes(x=SEC_90,y=ypos,xend=SEC_90,yend=p_10),inherit.aes = TRUE,linetype=2) + 
   geom_segment(aes(x=0,y=p_10,xend=SEC_90,yend=p_10),inherit.aes = TRUE,linetype=2) +
 
   #NSEC 80
-  geom_segment(aes(x=SEC_80,y=0,xend=SEC_80,yend=p_20),inherit.aes = TRUE,linetype=2) + 
+  geom_segment(aes(x=SEC_80,y=ypos,xend=SEC_80,yend=p_20),inherit.aes = TRUE,linetype=2) + 
   geom_segment(aes(x=0,y=p_20,xend=SEC_80,yend=p_20),inherit.aes = TRUE,linetype=2) +
-  
   annotate("text", x = c(SEC_99, SEC_95, SEC_90, SEC_80), 
-           y = -0.02, label = c("1", "5", "10", "20")) +
-  
+           y = 0, label = c("NSEC1%", "NSEC5%", "NSEC10%", "NSEC20%"),
+           size=2.5, angle = 90, hjust = 0, vjust=-0.5) +
+  ylim(0,1) +
+  coord_cartesian(clip = "off") +
   # ols result
   geom_line(data=data.frame(x=seq(0,35,0.001),y=pred(x=seq(0,35,0.001),B.cur)),
             aes(x=x,y=y),color="red") +
   theme_classic() +
-  xlab("Concentration (x)") + ylab("Response (y)") 
+  xlab("Concentration (x)") + ylab("Response (y)") + 
+  scale_x_continuous(expand = c(0, 0)) + 
+  scale_y_continuous(expand = c(0, 0))
+
 pmle
 
 
@@ -221,40 +226,44 @@ pjags<-ggplot(data=nsec.dat,aes(x=x,y=y/n))+ geom_point()+
   geom_line(data=data.frame(x=x.seq, y=m.vals),
             aes(x=x,y=y),color="blue") +
   # NSEC 99
-  geom_segment(aes(x=NSECsummary[1,1],y=0,xend=NSECsummary[1,1],
+  geom_segment(aes(x=NSECsummary[1,1],y=ypos,xend=NSECsummary[1,1],
                    yend=control_quantiles[1]),inherit.aes = TRUE,linetype=2) + 
   geom_segment(aes(x=0,y=control_quantiles[1],xend=NSECsummary[1,1],
                    yend=control_quantiles[1]),inherit.aes = TRUE,linetype=2) +
   
   # #NSEC 95
-  geom_segment(aes(x=NSECsummary[1,2],y=0,xend=NSECsummary[1,2],
+  geom_segment(aes(x=NSECsummary[1,2],y=ypos,xend=NSECsummary[1,2],
                    yend=control_quantiles[2]),inherit.aes = TRUE,linetype=2) + 
   geom_segment(aes(x=0,y=control_quantiles[2],xend=NSECsummary[1,2],
                    yend=control_quantiles[2]),inherit.aes = TRUE,linetype=2) +
 
   #NSEC 90
-  geom_segment(aes(x=NSECsummary[1,3],y=0,xend=NSECsummary[1,3],
+  geom_segment(aes(x=NSECsummary[1,3],y=ypos,xend=NSECsummary[1,3],
                    yend=control_quantiles[3]),inherit.aes = TRUE,linetype=2) +
   geom_segment(aes(x=0,y=control_quantiles[3],xend=NSECsummary[1,3],
                    yend=control_quantiles[3]),inherit.aes = TRUE,linetype=2) +
 
   #NSEC 80
-  geom_segment(aes(x=NSECsummary[1,4],y=0,xend=NSECsummary[1,4],
+  geom_segment(aes(x=NSECsummary[1,4],y=ypos,xend=NSECsummary[1,4],
                    yend=control_quantiles[4]),inherit.aes = TRUE,linetype=2) +
   geom_segment(aes(x=0,y=control_quantiles[4],xend=NSECsummary[1,4],
                    yend=control_quantiles[4]),inherit.aes = TRUE,linetype=2) +
-  
-  annotate("text", x = NSECsummary[1,], y = -0.02, label = c("1", "5", "10", "20")) +
+  annotate("text", x = NSECsummary[1,],
+           y = 0, label = c("NSEC1%", "NSEC5%", "NSEC10%", "NSEC20%"),
+           size=2.5, angle = 90, hjust = 0, vjust=-0.5) +
+  ylim(0,1) +
+  coord_cartesian(clip = "off") +
   
   geom_line(data=data.frame(x=x.seq,y=up.vals),
             aes(x=x,y=y),color="#00BFFF") +
   geom_line(data=data.frame(x=x.seq,y=lw.vals),
             aes(x=x,y=y),color="#00BFFF") +
   theme_classic() +
-  xlab("Concentration (x)") + ylab("Response (y)") 
+  xlab("Concentration (x)") + ylab("Response (y)") + 
+  scale_x_continuous(expand = c(0, 0)) + 
+  scale_y_continuous(expand = c(0, 0))
 
-
-pjags
+pjags 
 
 ### Figure 4 single panel plot ----
 pdf("Figure4.pdf", width = 7, height = 10)
